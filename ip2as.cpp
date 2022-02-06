@@ -141,7 +141,7 @@ class Trie{
 					curr->set_empty(false);
 				}
 				
-				cout << curr->get_ip() << "  " << curr->get_cidr() << "   " << curr->get_prefix() << endl;
+				//cout << curr->get_ip() << "  " << curr->get_cidr() << "   " << curr->get_prefix() << endl;
 				
 				
 				//cout << curr->get_ip() << "  " << curr->get_prefix() << endl;
@@ -205,7 +205,7 @@ int main(int argc, char **argv){
 	//cout << tr->get_root()->get_ip() << endl;
 	//cout << tr->get_root()->get_child(1)->get_child(1)->get_ip() << endl;
 	//cout << tr->get_root()->get_child(1)->get_child(0)->get_ip() << endl;
-	cout << tr->get_root()->get_child(1)->get_child(1)->get_prefix() << endl;
+	//cout << tr->get_root()->get_child(1)->get_child(1)->get_prefix() << endl;
 	//cout << tr->get_root()->get_child(1)->has_child(0) << endl;
 	
 	//Node n("192.168.34.3 16 69");

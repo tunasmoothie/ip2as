@@ -107,11 +107,12 @@ class Trie{
 	public:
 		Trie(string filename){
 			db.open(filename);
-			root = new Node();
 		}
 		
 		// builds Trie with Nodes from a given database file
 		void build(){
+			root = new Node();
+			
 			string line;
 			
 			while(getline(db, line)){
@@ -121,61 +122,63 @@ class Trie{
 				
 				// for each bit in the prefix, check if node has child and create if it doesn't
 				for(int i = 0; i < bits.length(); i++){
-					if(bits[i] == '0'){
-						if(!curr->has_child(0)){
-							curr->set_child(0, new Node());
-						}
-						curr = curr->get_child(0);
+					int w = (bits[i] == '0') ? 0 : 1;
+					
+					if(curr->has_child(w)){
+						curr = curr->get_child(w);
 					}
-					else if(bits[i] == '1'){
-						if(!curr->has_child(1)){
-							curr->set_child(1, new Node());
-						}
-						curr = curr->get_child(1);
+					else{
+						curr->set_child(w, new Node());
+						curr = curr->get_child(w);
 					}
 				}
 				
 				// copies the new node's data into the trie
-				if(curr->is_empty()){
-					curr->copy_data(&n);
-					curr->set_empty(false);
-				}
-				
-				//cout << curr->get_ip() << "  " << curr->get_cidr() << "   " << curr->get_prefix() << endl;
-				
-				
-				//cout << curr->get_ip() << "  " << curr->get_prefix() << endl;
+				curr->copy_data(&n);
+				curr->set_empty(false);
 			}
 		}
 		
-		// matches given ip with longest prefix in trie through crawling
+		// matches given ip with longest prefix in trie through crawling, returns nullptr if none match
 		Node *match(string ip){
 			Node *curr = root;
-			for(int i = 0; i < ip.length(); i++){
-				cout << "Current Node: " << curr->get_ip() << "  " << curr->get_cidr() << endl;
-				
-				if(ip[i] == '0'){
-					if(curr->has_child(0))
-						curr = curr->get_child(0);
-					else
-						return curr;
-				}
-				else if(ip[i] == '1'){
-					if(curr->has_child(1))
-						curr = curr->get_child(1);
-					else
-						return curr;
-				}
-				
-				//curr = curr->get_child(1);
-				//(ip[i] == 0) ? curr = curr->get_child(0) : curr = curr->get_child(1);
-			}
+			Node *found = nullptr;
+			string ip_bin = extract_prefix_from_ip(ip, 32);
 			
-			cout << "No matching prefix found for " << ip << endl;
+			for(int i = 0; i <= 32; i++){
+				int w = (ip_bin[i] == '0') ? 0 : 1;
+				
+				if(curr->has_child(w)){
+					curr = curr->get_child(w);
+					
+					// saves the longest matched prefix found at this point
+					if(!curr->is_empty()){
+						found = curr;
+					}
+				}
+				else{
+					return found;
+				}
+				
+			}
+
 			return nullptr;
 		}
 		
-		
+		// calls match() looping through a file with a list of IPs
+		void match_from_list(string filename){
+			ifstream fs(filename);
+			
+			string line;
+			while(getline(fs, line)){
+				Node *n = match(line);
+				if(n == nullptr)
+					cout << "No matching prefix found for " << line << endl;
+				else
+					cout << n->get_ip() << "/" << n->get_cidr() << "   " << n->get_as() << "   " << line << endl;
+			}
+			
+		}
 		
 		Node *get_root(){
 			return root;
@@ -198,18 +201,8 @@ int main(int argc, char **argv){
 	
 	Trie *tr = new Trie(database);
 	tr->build();
-	
-	Node *m = tr->match("192.0.0.12");
-	//cout << m->get_ip() << "  " << m->get_cidr() << endl; 
-	
-	//cout << tr->get_root()->get_ip() << endl;
-	//cout << tr->get_root()->get_child(1)->get_child(1)->get_ip() << endl;
-	//cout << tr->get_root()->get_child(1)->get_child(0)->get_ip() << endl;
-	//cout << tr->get_root()->get_child(1)->get_child(1)->get_prefix() << endl;
-	//cout << tr->get_root()->get_child(1)->has_child(0) << endl;
-	
-	//Node n("192.168.34.3 16 69");
-	
+	tr->match_from_list(iplist);
+
 	return 0;
 }
 

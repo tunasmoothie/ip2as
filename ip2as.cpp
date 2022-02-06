@@ -27,7 +27,6 @@ string extract_prefix_from_ip(string ip, int cidr){
 	
 	string prefix = dec_to_bin(chunks);
 	prefix = prefix.substr(0, cidr);
-	//cout << prefix;
 	
 	return prefix;
 }
@@ -62,10 +61,6 @@ class Node{
 			empty = false;
 			
 			prefix = extract_prefix_from_ip(ip, cidr);
-			//cout << prefix;
-			
-			//cout << ip << cidr << as << endl;
-			//cout << prefix;
 		}
 		
 		string get_ip(){return ip;}
@@ -89,7 +84,10 @@ class Node{
 		}
 		
 		Node *get_child(int i){
-			return (i == 0) ? node0 : node1;
+			if(!has_child(i)) 
+				return nullptr;
+			else
+				return (i == 0) ? node0 : node1;
 		}
 		
 		bool has_child(int i){
@@ -121,6 +119,7 @@ class Trie{
 				Node n(line);
 				string bits = n.get_prefix();
 				
+				// for each bit in the prefix, check if node has child and create if it doesn't
 				for(int i = 0; i < bits.length(); i++){
 					if(bits[i] == '0'){
 						if(!curr->has_child(0)){
@@ -136,6 +135,7 @@ class Trie{
 					}
 				}
 				
+				// copies the new node's data into the trie
 				if(curr->is_empty()){
 					curr->copy_data(&n);
 					curr->set_empty(false);
@@ -148,13 +148,39 @@ class Trie{
 			}
 		}
 		
+		// matches given ip with longest prefix in trie through crawling
+		Node *match(string ip){
+			Node *curr = root;
+			for(int i = 0; i < ip.length(); i++){
+				cout << "Current Node: " << curr->get_ip() << "  " << curr->get_cidr() << endl;
+				
+				if(ip[i] == '0'){
+					if(curr->has_child(0))
+						curr = curr->get_child(0);
+					else
+						return curr;
+				}
+				else if(ip[i] == '1'){
+					if(curr->has_child(1))
+						curr = curr->get_child(1);
+					else
+						return curr;
+				}
+				
+				//curr = curr->get_child(1);
+				//(ip[i] == 0) ? curr = curr->get_child(0) : curr = curr->get_child(1);
+			}
+			
+			cout << "No matching prefix found for " << ip << endl;
+			return nullptr;
+		}
+		
+		
+		
 		Node *get_root(){
 			return root;
 		}
 		
-		Node *match(string ip){
-			return root;
-		}
 };
 
 int main(int argc, char **argv){
@@ -167,13 +193,19 @@ int main(int argc, char **argv){
 		exit(1);
 	}
 	
-	Trie *tr = new Trie("DB_091803.txt");
+	string database = argv[1];
+	string iplist = argv[2];
+	
+	Trie *tr = new Trie(database);
 	tr->build();
+	
+	Node *m = tr->match("192.0.0.12");
+	//cout << m->get_ip() << "  " << m->get_cidr() << endl; 
 	
 	//cout << tr->get_root()->get_ip() << endl;
 	//cout << tr->get_root()->get_child(1)->get_child(1)->get_ip() << endl;
 	//cout << tr->get_root()->get_child(1)->get_child(0)->get_ip() << endl;
-	//cout << tr->get_root()->get_child(1)->has_child(1) << endl;
+	cout << tr->get_root()->get_child(1)->get_child(1)->get_prefix() << endl;
 	//cout << tr->get_root()->get_child(1)->has_child(0) << endl;
 	
 	//Node n("192.168.34.3 16 69");
